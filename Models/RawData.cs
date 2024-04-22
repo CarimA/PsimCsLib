@@ -1,10 +1,17 @@
-﻿namespace PsimCsLib.Models;
+﻿using PsimCsLib.Entities;
+
+namespace PsimCsLib.Models;
+
 public sealed class RawData
 {
-    public byte[] Buffer { get; }
-
-    public RawData(byte[] buffer)
+    public Room Room { get; }
+    public bool IsIntro { get; }
+    public string Data { get; }
+    
+    public RawData(Room room, bool isIntro, string data)
     {
-        Buffer = buffer;
+        Room = room;
+        IsIntro = isIntro;
+        Data = data;
     }
 }

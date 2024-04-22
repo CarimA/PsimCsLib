@@ -19,6 +19,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
             "challstr" => HandleChallengeString,
             "init" => HandleClientRoomJoin,
             "deinit" => HandleClientRoomLeave,
+            "raw" => HandleRaw,
             _ => UnhandledCommand
         });
 
@@ -43,5 +44,10 @@ internal class ProcessCommands : ISubscriber<PsimData>
     private async Task HandleClientRoomLeave(PsimData e)
     {
         await _client.Publish(new ClientLeaveRoom(e.Room));
+    }
+
+    private async Task HandleRaw(PsimData e)
+    {
+        await _client.Publish(new RawData(e.Room, e.IsIntro, e.Arguments[0]));
     }
 }
