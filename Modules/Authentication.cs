@@ -26,18 +26,19 @@ internal class Authentication : ISubscriber<ChallengeString>, ISubscriber<LoginS
 
         var response = await httpClient.PostAsync(_client.Options.LoginServer, content);
         var responseString = (await response.Content.ReadAsStringAsync())[1..];
-
         var obj = JObject.Parse(responseString);
-
-        var error = (obj.GetValue("actionerror") ?? string.Empty).ToString();
         var assertion = (obj.GetValue("assertion") ?? string.Empty).ToString();
         var success = (obj.GetValue("actionsuccess")?.Value<bool>() ?? false)
             && !string.IsNullOrEmpty(assertion);
 
-        if (success)
-            await _client.Publish(new LoginSuccess(responseString, assertion));
-        else
+        if (!success)
+        {
+            var error = (obj.GetValue("actionerror") ?? string.Empty).ToString();
             await _client.Publish(new LoginFailure(responseString, error));
+            return;
+        }
+        
+        await _client.Publish(new LoginSuccess(responseString, assertion));
     }
     
     public async Task HandleEvent(LoginSuccess e)
