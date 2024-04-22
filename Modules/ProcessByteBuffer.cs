@@ -3,16 +3,16 @@ using PsimCsLib.PubSub;
 using System.Text;
 
 namespace PsimCsLib.Modules;
-internal class ProcessRawData : ISubscriber<RawData>
+internal class ProcessByteBuffer : ISubscriber<ByteBuffer>
 {
     private readonly PsimClient _client;
 
-    public ProcessRawData(PsimClient client)
+    public ProcessByteBuffer(PsimClient client)
     {
         _client = client;
     }
 
-    public async Task HandleEvent(RawData e)
+    public async Task HandleEvent(ByteBuffer e)
     {
         var message = Encoding.UTF8.GetString(e.Buffer);
         await ProcessMessage(message);

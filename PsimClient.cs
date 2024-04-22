@@ -31,7 +31,7 @@ public sealed class PsimClient : Publisher
 
         Rooms = new RoomCollection(this);
 
-        Subscribe(new ProcessRawData(this));
+        Subscribe(new ProcessByteBuffer(this));
         Subscribe(new ProcessCommands(this));
         Subscribe(new Authentication(this));
     }
@@ -137,7 +137,7 @@ public sealed class PsimClient : Publisher
             } while (!result.EndOfMessage);
 
             var bytes = dataStream.ToArray();
-            await Publish(new RawData(bytes));
+            await Publish(new ByteBuffer(bytes));
 
             dataStream.SetLength(0);
         }
