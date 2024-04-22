@@ -1,6 +1,6 @@
 ﻿namespace PsimCsLib;
 
-public class PsimClientOptions
+public sealed class PsimClientOptions
 {
     public string Username { get; set; }
     public string Password { get; set; }
@@ -8,8 +8,6 @@ public class PsimClientOptions
     public string LoginServer { get; set; } = "https://play.pokemonshowdown.com/~~showdown/action.php";
     public bool SecureWebsocketConnection { get; set; } = false;
     public int Port { get; set; } = 8000;
-    public int Timeout { get; set; } = 30000;
-    public int AutoReconnectTimer { get; set; } = 30000;
 
     internal string ToServerUri()
     {
