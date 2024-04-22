@@ -20,6 +20,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
             "init" => HandleClientRoomJoin,
             "deinit" => HandleClientRoomLeave,
             "raw" => HandleRaw,
+            "c:" => HandleChatMessage,
             _ => UnhandledCommand
         });
 
@@ -50,4 +51,11 @@ internal class ProcessCommands : ISubscriber<PsimData>
     {
         await _client.Publish(new RawData(e.Room, e.IsIntro, e.Arguments[0]));
     }
+
+    private async Task HandleChatMessage(PsimData e)
+    {
+        var datePosted = DateTimeOffset.FromUnixTimeSeconds(long.Parse(e.Arguments[0])).LocalDateTime;
+        await _client.Publish(new ChatMessage(datePosted, e.Arguments[1], e.Arguments[2], e.IsIntro));
+    }
+
 }
