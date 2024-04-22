@@ -1,9 +1,9 @@
 ﻿namespace PsimCsLib.Models;
-public sealed class UnhandledCommand
+public sealed class NotImplementedCommand
 {
     public PsimData Data { get; }
 
-    public UnhandledCommand(PsimData data)
+    public NotImplementedCommand(PsimData data)
     {
         Data = data;
     }

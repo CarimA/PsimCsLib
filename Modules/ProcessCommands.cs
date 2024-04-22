@@ -22,15 +22,15 @@ internal class ProcessCommands : ISubscriber<PsimData>
             "raw" => HandleRaw,
             "c:" => HandleChatMessage,
             "pm" => HandlePrivateMessage,
-            _ => UnhandledCommand
+            _ => NotImplementedCommand
         });
 
         await action(e);
     }
 
-    private async Task UnhandledCommand(PsimData e)
+    private async Task NotImplementedCommand(PsimData e)
     {
-        await _client.Publish(new UnhandledCommand(e));
+        await _client.Publish(new NotImplementedCommand(e));
     }
 
     private async Task HandleChallengeString(PsimData e)
