@@ -23,7 +23,7 @@ public static class Utils
     {
         return rank switch
         {
-            "?" => Rank.Locked,
+            "‽" => Rank.Locked,
             " " => Rank.Normal,
             "+" => Rank.Voice,
             "*" => Rank.Bot,
@@ -31,7 +31,7 @@ public static class Utils
             "@" => Rank.Moderator,
             "&" => Rank.Administrator,
             "#" => Rank.RoomOwner,
-            _ => Rank.Normal
+            _ => throw new NotImplementedException($"Rank {rank} is not known")
         };
     }
 }
