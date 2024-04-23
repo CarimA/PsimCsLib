@@ -14,6 +14,7 @@ public sealed class PsimClient : Publisher
     public bool LoggedIn { get; internal set; }
 
     public RoomCollection Rooms { get; }
+    internal UserCollection Users { get; }
     public PsimClientOptions Options { get; }
 
     private readonly ClientWebSocket _socket;
@@ -30,6 +31,7 @@ public sealed class PsimClient : Publisher
         _closeDescription = string.Empty;
 
         Rooms = new RoomCollection(this);
+        Users = new UserCollection(this);
 
         Subscribe(new ProcessByteBuffer(this));
         Subscribe(new ProcessCommands(this));

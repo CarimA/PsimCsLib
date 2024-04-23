@@ -5,40 +5,26 @@ namespace PsimCsLib.Entities;
 public class UserCollection
 {
     private readonly PsimClient _client;
-    private readonly Dictionary<string, User> _users;
+
+    private readonly Dictionary<string, RoomUser> _roomUsers;
+    private readonly List<User> _users;
 
     public UserCollection(PsimClient client)
     {
         _client = client;
-        _users = new Dictionary<string, User>();
+        _roomUsers = new Dictionary<string, RoomUser>();
+        _users = new List<User>();
     }
 
-    public User this[string key]
+    internal RoomUser FindUser(string username)
     {
-        get
-        {
-            var token = Utils.ProcessName(key).TokenName;
+        var token = Utils.ProcessName(username).TokenName;
+        if (_roomUsers.TryGetValue(token, out var value))
+            return value;
 
-            if (!_users.TryGetValue(token, out var result))
-            {
-                result = new User(key);
-                _users.Add(token, result);
-            }
-
-            return result;
-        }
-    }
-
-    internal void Rename(string oldName, string newName)
-    {
-        var oldToken = Utils.ProcessName(oldName).TokenName;
-        var newToken = Utils.ProcessName(newName).TokenName;
-
-        if (!_users.TryGetValue(oldToken, out var result)) 
-            return;
-
-        _users.Remove(oldToken);
-        _users.Add(newToken, result);
-        result.Rename(newName);
+        var account = new User();
+        var user = new RoomUser(_client, account, username);
+        _roomUsers.Add(token, user);
+        return user;
     }
 }

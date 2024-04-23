@@ -3,6 +3,7 @@
 public enum Rank
 {
     Locked,
+    Muted,
     Normal,
     Voice,
     Bot,

@@ -5,6 +5,7 @@ public class Room
     private readonly PsimClient _client;
     public string Name { get; }
 
+
     public Room(PsimClient client, string name)
     {
         _client = client;
