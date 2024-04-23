@@ -5,7 +5,7 @@ namespace PsimCsLib;
 
 public static class Utils
 {
-    public static (Rank Rank, string UserName, string DisplayName) ProcessName(string input)
+    public static (Rank Rank, string TokenName, string DisplayName) ProcessName(string input)
     {
         var rank = ToRank(input[..1]);
         var displayName = input[1..];
