@@ -23,6 +23,7 @@ public static class Utils
     {
         return rank switch
         {
+            "?" => Rank.Locked,
             " " => Rank.Normal,
             "+" => Rank.Voice,
             "*" => Rank.Bot,
