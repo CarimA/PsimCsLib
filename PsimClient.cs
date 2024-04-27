@@ -38,27 +38,48 @@ public sealed class PsimClient : Publisher
         Subscribe(new Authentication(this));
     }
 
-    public async Task Connect()
+    public async Task Connect(bool autoReconnect = false)
     {
-        try
+        var firstRun = true;
+        while (autoReconnect || firstRun)
         {
-            await _socket.ConnectAsync(new Uri(Options.ToServerUri()), _cancellationTokenSource.Token);
-            await Publish(new SocketConnected());
+            firstRun = false;
 
-            await Task.WhenAny(Send(), Receive(), CheckDisconnect());
+            try
+            {
+                await _socket.ConnectAsync(new Uri(Options.ToServerUri()), _cancellationTokenSource.Token);
+                await Publish(new SocketConnected());
+
+                await Task.WhenAny(Send(), Receive(), CheckDisconnect());
+            }
+            catch (WebSocketException ex)
+            {
+                await Publish(new SocketError(ex));
+
+                if (IsUnrecoverableWebsocketError(ex.WebSocketErrorCode))
+                    return;
+            }
+            finally
+            {
+                await Cleanup();
+            }
+
+            await Task.Delay(500);
         }
-        catch (Exception ex)
-        {
-            await Publish(new SocketError(ex));
-            throw;
-        }
-        finally
-        {
-            var status = _socket.CloseStatus ?? WebSocketCloseStatus.NormalClosure;
-            var desc = _socket.CloseStatusDescription ?? _closeDescription;
-            await Publish(new SocketDisconnected(status, desc));
-            _socket?.Dispose();
-        }
+    }
+
+    private bool IsUnrecoverableWebsocketError(WebSocketError error)
+    {
+        return error is WebSocketError.NotAWebSocket or WebSocketError.UnsupportedProtocol
+            or WebSocketError.UnsupportedVersion;
+    }
+
+    private async Task Cleanup()
+    {
+        var status = _socket.CloseStatus ?? WebSocketCloseStatus.NormalClosure;
+        var desc = _socket.CloseStatusDescription ?? _closeDescription;
+        await Publish(new SocketDisconnected(status, desc));
+        _socket?.Dispose();
     }
 
     public void Disconnect(string reason)
