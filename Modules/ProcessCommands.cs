@@ -22,6 +22,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
             "raw" => HandleRaw,
             "c:" => HandleChatMessage,
             "pm" => HandlePrivateMessage,
+            "users" => HandleUsers,
             _ => NotImplementedCommand
         });
 
@@ -71,5 +72,13 @@ internal class ProcessCommands : ISubscriber<PsimData>
             var user = _client.Users[e.Arguments[1]];
             await _client.Publish(new PrivateMessage(user, e.Arguments[2], e.IsIntro));
         }
+    }
+
+    private async Task HandleUsers(PsimData e)
+    {
+        var split = e.Arguments[0].Split(',');
+        var count = int.Parse(split[0]);
+        var users = split.Skip(1).Select(name => (name, _client.Users[name])).ToList();
+        await _client.Publish(new RoomUsers(e.Room, count, users));
     }
 }

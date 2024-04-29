@@ -7,7 +7,7 @@ public static class Utils
 {
     public static (Rank Rank, string TokenName, string DisplayName) ProcessName(string input)
     {
-        var rank = ToRank(input[..1]);
+        var rank = ToRank(input);
         var displayName = input[1..];
         var username = SanitiseName(displayName);
 
@@ -21,7 +21,7 @@ public static class Utils
 
     public static Rank ToRank(string rank)
     {
-        return rank switch
+        return rank[..1] switch
         {
             "‽" => Rank.Locked,
             "!" => Rank.Muted,

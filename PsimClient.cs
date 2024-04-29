@@ -36,6 +36,7 @@ public sealed class PsimClient : Publisher
         Subscribe(new ProcessByteBuffer(this));
         Subscribe(new ProcessCommands(this));
         Subscribe(new Authentication(this));
+        Subscribe(new UserJoinsRoom(this));
     }
 
     public async Task Connect(bool autoReconnect = false)

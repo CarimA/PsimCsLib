@@ -17,15 +17,25 @@ public sealed class UserCollection
     {
         get
         {
-            var token = Utils.ProcessName(key).TokenName;
+            var (_, TokenName, DisplayName) = Utils.ProcessName(key);
 
-            if (!_users.TryGetValue(token, out var result))
+            if (!_users.TryGetValue(TokenName, out var result))
             {
-                result = new User(_client, key);
+                result = new User(_client, DisplayName);
                 _users.TryAdd(key, result);
             }
 
             return result;
+        }
+    }
+
+    internal void RenameUser(string oldName, string newName)
+    {
+        var token = Utils.SanitiseName(oldName);
+        if (_users.TryRemove(token, out var result))
+        {
+            result.Rename(newName);
+            _users.TryAdd(Utils.SanitiseName(newName), result);
         }
     }
 }
