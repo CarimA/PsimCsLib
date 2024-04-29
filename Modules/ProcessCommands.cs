@@ -64,13 +64,13 @@ internal class ProcessCommands : ISubscriber<PsimData>
 
     private async Task HandlePrivateMessage(PsimData e)
     {
-        if (e.Arguments[1] == "~")
+        if (e.Arguments[0] == "~")
         {
             await _client.Publish(new PrivateSystemMessage(e.Arguments[2]));
         }
         else
         {
-            var user = _client.Users[e.Arguments[1]];
+            var user = _client.Users[e.Arguments[0]];
             await _client.Publish(new PrivateMessage(user, e.Arguments[2], e.IsIntro));
         }
     }
