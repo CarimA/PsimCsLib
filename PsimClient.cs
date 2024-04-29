@@ -8,7 +8,7 @@ using System.Text;
 
 namespace PsimCsLib;
 
-public sealed class PsimClient : Publisher
+public class PsimClient : Publisher
 {
     public WebSocketState State => _socket.State;
     public bool LoggedIn { get; internal set; }
