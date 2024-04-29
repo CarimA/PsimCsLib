@@ -1,19 +1,33 @@
-﻿using System.Xml.Linq;
+﻿using PsimCsLib.Enums;
 
 namespace PsimCsLib.Entities;
 
-public class User
+public sealed class User
 {
-    private readonly List<RoomUser> _aliases;
-    public IReadOnlyList<RoomUser> Aliases => _aliases.AsReadOnly();
+    private readonly PsimClient _client;
+    private Dictionary<Room, Rank> _ranks;
+    public IReadOnlyDictionary<Room, Rank> Rank => _ranks.AsReadOnly();
+    public string DisplayName { get; }
+    public string TokenName { get; }
 
-    internal User()
+    internal User(PsimClient client, string name)
     {
-        _aliases = new List<RoomUser>();
+        _client = client;
+        (_, TokenName, DisplayName) = Utils.ProcessName(name);
     }
 
-    internal void AddAlias(RoomUser user)
+    public async Task Send(string message)
     {
-        _aliases.Add(user);
+        await _client.Send($"|/w {TokenName},{message}");
+    }
+
+    internal void Join(Room room, Rank rank)
+    {
+        _ranks.Add(room, rank);
+    }
+
+    internal void Leave(Room room)
+    {
+        _ranks.Remove(room);
     }
 }

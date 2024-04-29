@@ -11,7 +11,7 @@ public class RoomCollection
         _rooms = new Dictionary<string, Room>();
     }
 
-    public Room this[string key]
+    internal Room this[string key]
     {
         get
         {
@@ -27,15 +27,12 @@ public class RoomCollection
 
     public async Task<Room> Join(string room)
     {
-        var obj = new Room(_client, room);
-        _rooms.TryAdd(room, obj);
         await _client.Send($"|/join {room}");
-        return obj;
+        return this[room];
     }
 
     public async Task Leave(string room)
     {
-        _rooms.Remove(room);
         await _client.Send($"|/leave {room}");
     }
 }

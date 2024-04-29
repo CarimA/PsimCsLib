@@ -1,30 +1,31 @@
-﻿using PsimCsLib.Enums;
+﻿using System.Collections.Concurrent;
 
 namespace PsimCsLib.Entities;
 
-public class UserCollection
+public sealed class UserCollection
 {
     private readonly PsimClient _client;
+    private readonly ConcurrentDictionary<string, User> _users;
 
-    private readonly Dictionary<string, RoomUser> _roomUsers;
-    private readonly List<User> _users;
-
-    public UserCollection(PsimClient client)
+    internal UserCollection(PsimClient client)
     {
         _client = client;
-        _roomUsers = new Dictionary<string, RoomUser>();
-        _users = new List<User>();
+        _users = new ConcurrentDictionary<string, User>();
     }
 
-    internal RoomUser FindUser(string username)
+    internal User this[string key]
     {
-        var token = Utils.ProcessName(username).TokenName;
-        if (_roomUsers.TryGetValue(token, out var value))
-            return value;
+        get
+        {
+            var token = Utils.ProcessName(key).TokenName;
 
-        var account = new User();
-        var user = new RoomUser(_client, account, username);
-        _roomUsers.Add(token, user);
-        return user;
+            if (!_users.TryGetValue(token, out var result))
+            {
+                result = new User(_client, key);
+                _users.TryAdd(key, result);
+            }
+
+            return result;
+        }
     }
 }

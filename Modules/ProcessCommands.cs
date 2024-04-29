@@ -56,7 +56,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
     private async Task HandleChatMessage(PsimData e)
     {
         var datePosted = DateTimeOffset.FromUnixTimeSeconds(long.Parse(e.Arguments[0])).LocalDateTime;
-        var user = _client.Users.FindUser(e.Arguments[1]);
+        var user = _client.Users[e.Arguments[1]];
         await _client.Publish(new ChatMessage(e.Room, datePosted, user, e.Arguments[2], e.IsIntro));
     }
 
@@ -68,7 +68,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
         }
         else
         {
-            var user = _client.Users.FindUser(e.Arguments[1]);
+            var user = _client.Users[e.Arguments[1]];
             await _client.Publish(new PrivateMessage(user, e.Arguments[2], e.IsIntro));
         }
     }
