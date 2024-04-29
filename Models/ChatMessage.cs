@@ -10,7 +10,7 @@ public sealed class ChatMessage
     public string Message { get; }
     public bool IsIntro { get; }
 
-    public ChatMessage(Room room, DateTime datePosted, User user, string message, bool isIntro)
+    internal ChatMessage(Room room, DateTime datePosted, User user, string message, bool isIntro)
     {
         Room = room;
         DatePosted = datePosted;

@@ -9,7 +9,7 @@ public sealed class PsimData
     public List<string> Arguments { get; }
     public bool IsIntro { get; }
 
-    public PsimData(Room room, string command, List<string> args, bool isIntro)
+    internal PsimData(Room room, string command, List<string> args, bool isIntro)
     {
         Room = room;
         Command = command;

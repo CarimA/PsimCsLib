@@ -3,7 +3,7 @@ public sealed class NotImplementedCommand
 {
     public PsimData Data { get; }
 
-    public NotImplementedCommand(PsimData data)
+    internal NotImplementedCommand(PsimData data)
     {
         Data = data;
     }

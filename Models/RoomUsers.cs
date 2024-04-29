@@ -8,7 +8,7 @@ public class RoomUsers
     public int Count { get; }
     public IReadOnlyList<(string RawName, User User)> Users { get; }
 
-    public RoomUsers(Room room, int count, List<(string RawName, User User)> users)
+    internal RoomUsers(Room room, int count, List<(string RawName, User User)> users)
     {
         Room = room;
         Count = count;

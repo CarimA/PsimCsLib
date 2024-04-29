@@ -3,7 +3,7 @@ public sealed class ByteBuffer
 {
     public byte[] Buffer { get; }
 
-    public ByteBuffer(byte[] buffer)
+    internal ByteBuffer(byte[] buffer)
     {
         Buffer = buffer;
     }
