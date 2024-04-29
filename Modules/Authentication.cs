@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using PsimCsLib.Entities;
 using PsimCsLib.Models;
 using PsimCsLib.PubSub;
 
@@ -18,7 +19,7 @@ internal class Authentication : ISubscriber<ChallengeString>, ISubscriber<LoginS
         var content = new FormUrlEncodedContent(new Dictionary<string, string>
         {
             { "act", "login" },
-            { "name", Utils.SanitiseName(_client.Options.Username) },
+            { "name", PsimUsername.TokeniseName(_client.Options.Username) },
             { "pass", _client.Options.Password },
             { "challengekeyid", e.Id },
             { "challenge", e.Challenge }

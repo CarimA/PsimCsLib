@@ -6,9 +6,9 @@ public class RoomUsers
 {
     public Room Room { get; }
     public int Count { get; }
-    public IReadOnlyList<(string RawName, User User)> Users { get; }
+    public IReadOnlyList<(RankPsimUsername, User)> Users { get; }
 
-    internal RoomUsers(Room room, int count, List<(string RawName, User User)> users)
+    internal RoomUsers(Room room, int count, List<(RankPsimUsername, User)> users)
     {
         Room = room;
         Count = count;

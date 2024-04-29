@@ -1,4 +1,5 @@
-﻿using PsimCsLib.Models;
+﻿using PsimCsLib.Entities;
+using PsimCsLib.Models;
 using PsimCsLib.PubSub;
 
 namespace PsimCsLib.Modules;
@@ -78,7 +79,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
     {
         var split = e.Arguments[0].Split(',');
         var count = int.Parse(split[0]);
-        var users = split.Skip(1).Select(name => (name, _client.Users[name])).ToList();
+        var users = split.Skip(1).Select(name => (new RankPsimUsername(name), _client.Users[name])).ToList();
         await _client.Publish(new RoomUsers(e.Room, count, users));
     }
 }

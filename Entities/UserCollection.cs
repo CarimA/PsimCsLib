@@ -5,23 +5,21 @@ namespace PsimCsLib.Entities;
 public sealed class UserCollection
 {
     private readonly PsimClient _client;
-    private readonly ConcurrentDictionary<string, User> _users;
+    private readonly ConcurrentDictionary<PsimUsername, User> _users;
 
     internal UserCollection(PsimClient client)
     {
         _client = client;
-        _users = new ConcurrentDictionary<string, User>();
+        _users = new ConcurrentDictionary<PsimUsername, User>();
     }
 
-    internal User this[string key]
+    internal User this[PsimUsername key]
     {
         get
         {
-            var (_, TokenName, DisplayName) = Utils.ProcessName(key);
-
-            if (!_users.TryGetValue(TokenName, out var result))
+            if (!_users.TryGetValue(key, out var result))
             {
-                result = new User(_client, DisplayName);
+                result = new User(_client, key);
                 _users.TryAdd(key, result);
             }
 
@@ -29,13 +27,26 @@ public sealed class UserCollection
         }
     }
 
-    internal void RenameUser(string oldName, string newName)
+    internal User this[RankPsimUsername key]
     {
-        var token = Utils.SanitiseName(oldName);
-        if (_users.TryRemove(token, out var result))
+        get
+        {
+            if (!_users.TryGetValue(key, out var result))
+            {
+                result = new User(_client, key);
+                _users.TryAdd(key, result);
+            }
+
+            return result;
+        }
+    }
+
+    internal void RenameUser(PsimUsername oldName, PsimUsername newName)
+    {
+        if (_users.TryRemove(oldName, out var result))
         {
             result.Rename(newName);
-            _users.TryAdd(Utils.SanitiseName(newName), result);
+            _users.TryAdd(newName, result);
         }
     }
 }

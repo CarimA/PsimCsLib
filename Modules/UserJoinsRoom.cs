@@ -13,9 +13,9 @@ internal class UserJoinsRoom : ISubscriber<RoomUsers>
 
     public async Task HandleEvent(RoomUsers e)
     {
-        foreach (var (rawName, user) in e.Users)
+        foreach (var (username, user) in e.Users)
         {
-            user.Join(e.Room, Utils.ToRank(rawName));
+            user.Join(e.Room, username.Rank);
         }
     }
 }
