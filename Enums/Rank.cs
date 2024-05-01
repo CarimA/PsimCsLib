@@ -2,13 +2,13 @@
 
 public enum Rank
 {
-    Locked,
-    Muted,
-    Normal,
-    Voice,
-    Bot,
-    Driver,
-    Moderator,
-    Administrator,
-    RoomOwner
+	Locked,
+	Muted,
+	Normal,
+	Voice,
+	Bot,
+	Driver,
+	Moderator,
+	Administrator,
+	RoomOwner
 }

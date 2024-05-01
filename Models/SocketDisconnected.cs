@@ -4,12 +4,12 @@ namespace PsimCsLib.Models;
 
 public sealed class SocketDisconnected
 {
-    public WebSocketCloseStatus CloseStatus { get; }
-    public string Reason { get; }
+	public WebSocketCloseStatus CloseStatus { get; }
+	public string Reason { get; }
 
-    internal SocketDisconnected(WebSocketCloseStatus closeStatus, string reason)
-    {
-        CloseStatus = closeStatus;
-        Reason = reason;
-    }
+	internal SocketDisconnected(WebSocketCloseStatus closeStatus, string reason)
+	{
+		CloseStatus = closeStatus;
+		Reason = reason;
+	}
 }

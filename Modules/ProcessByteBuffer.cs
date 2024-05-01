@@ -5,77 +5,77 @@ using System.Text;
 namespace PsimCsLib.Modules;
 internal class ProcessByteBuffer : ISubscriber<ByteBuffer>
 {
-    private readonly PsimClient _client;
+	private readonly PsimClient _client;
 
-    public ProcessByteBuffer(PsimClient client)
-    {
-        _client = client;
-    }
+	public ProcessByteBuffer(PsimClient client)
+	{
+		_client = client;
+	}
 
-    public async Task HandleEvent(ByteBuffer e)
-    {
-        var message = Encoding.UTF8.GetString(e.Buffer);
-        await ProcessMessage(message);
-    }
+	public async Task HandleEvent(ByteBuffer e)
+	{
+		var message = Encoding.UTF8.GetString(e.Buffer);
+		await ProcessMessage(message);
+	}
 
-    private async Task ProcessMessage(string message)
-    {
-        if (string.IsNullOrWhiteSpace(message))
-            return;
+	private async Task ProcessMessage(string message)
+	{
+		if (string.IsNullOrWhiteSpace(message))
+			return;
 
-        if (message.IndexOf('\n') > -1)
-        {
-            var split = message.Split('\n');
-            var room = "lobby";
-            var start = 0;
+		if (message.IndexOf('\n') > -1)
+		{
+			var split = message.Split('\n');
+			var room = "lobby";
+			var start = 0;
 
-            if (split[0][0] == '>')
-            {
-                start = 1;
-                room = split[0][1..];
-                if (string.IsNullOrWhiteSpace(room))
-                    room = "lobby";
-            }
+			if (split[0][0] == '>')
+			{
+				start = 1;
+				room = split[0][1..];
+				if (string.IsNullOrWhiteSpace(room))
+					room = "lobby";
+			}
 
-            for (var index = start; index < split.Length; index++)
-            {
-                var subsplit = split[index].Split('|');
-                if (subsplit.Length == 1)
-                    continue;
-                
-                var item = subsplit[1];
-                if (item == "init")
-                {
-                    for (var subIndex = index; subIndex < split.Length; subIndex++)
-                    {
-                        await ProcessMessage(room, split[subIndex], true);
-                        index = subIndex;
-                    }
-                }
-                else
-                {
-                    await ProcessMessage(room, split[index]);
-                }
-            }
-        }
-        else
-        {
-            await ProcessMessage("lobby", message);
-        }
-    }
+			for (var index = start; index < split.Length; index++)
+			{
+				var subsplit = split[index].Split('|');
+				if (subsplit.Length == 1)
+					continue;
 
-    private async Task ProcessMessage(string room, string message, bool isIntro = false)
-    {
-        var data = message.Split('|').Skip(1).ToList();
+				var item = subsplit[1];
+				if (item == "init")
+				{
+					for (var subIndex = index; subIndex < split.Length; subIndex++)
+					{
+						await ProcessMessage(room, split[subIndex], true);
+						index = subIndex;
+					}
+				}
+				else
+				{
+					await ProcessMessage(room, split[index]);
+				}
+			}
+		}
+		else
+		{
+			await ProcessMessage("lobby", message);
+		}
+	}
 
-        if (data.Count == 0)
-            return;
+	private async Task ProcessMessage(string room, string message, bool isIntro = false)
+	{
+		var data = message.Split('|').Skip(1).ToList();
 
-        var roomInstance = _client.Rooms[room];
-        var command = data.First();
-        var args = data.Skip(1).ToList();
+		if (data.Count == 0)
+			return;
 
-        await _client.Publish(new PsimData(roomInstance, command, args, isIntro));
-    }
+		var roomInstance = _client.Rooms[room];
+		var command = data.First();
+		var args = data.Skip(1).ToList();
+
+		await _client.Publish(new PsimData(roomInstance, command, args, isIntro));
+	}
 
 }

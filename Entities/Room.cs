@@ -2,17 +2,17 @@
 
 public class Room
 {
-    private readonly PsimClient _client;
-    public string Name { get; }
+	private readonly PsimClient _client;
+	public string Name { get; }
 
-    internal Room(PsimClient client, string name)
-    {
-        _client = client;
-        Name = name;
-    }
+	internal Room(PsimClient client, string name)
+	{
+		_client = client;
+		Name = name;
+	}
 
-    public async Task Send(string message)
-    {
-        await _client.Send($"{Name}|{message}");
-    }
+	public async Task Send(string message)
+	{
+		await _client.Send($"{Name}|{message}");
+	}
 }

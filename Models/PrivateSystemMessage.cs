@@ -2,10 +2,10 @@
 
 public sealed class PrivateSystemMessage
 {
-    public string Message { get; }
+	public string Message { get; }
 
-    internal PrivateSystemMessage(string message)
-    {
-        Message = message;
-    }
+	internal PrivateSystemMessage(string message)
+	{
+		Message = message;
+	}
 }
