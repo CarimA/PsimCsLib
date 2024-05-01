@@ -1,19 +1,25 @@
-﻿using System.Text.RegularExpressions;
+﻿using PsimCsLib.Enums;
+using System.Text.RegularExpressions;
 
 namespace PsimCsLib.Entities;
 
 public class PsimUsername : IEquatable<PsimUsername>
 {
-    public string Token { get; }
+	private readonly PsimClient _client;
+	public Rank Rank { get; }
+	public string Token { get; }
     public string DisplayName { get; }
     public bool IsIdle { get; }
-
-    public PsimUsername(string input)
-    {
-        IsIdle = input.EndsWith("@!");
+    
+	internal PsimUsername(PsimClient client, string input)
+	{
+		_client = client;
+		Rank = GetRank(input);
+		IsIdle = input.EndsWith("@!");
         DisplayName = input.Substring(1, input.Length - (IsIdle ? 3 : 1));
         Token = TokeniseName(input);
     }
+
     public static string TokeniseName(string input)
     {
         return Regex.Replace(input.ToLowerInvariant(), "[^a-z0-9]", "");
@@ -33,14 +39,48 @@ public class PsimUsername : IEquatable<PsimUsername>
     {
         return Token.GetHashCode(StringComparison.InvariantCultureIgnoreCase);
     }
+	
+    public async Task Send(string message)
+    {
+	    await _client.Send($"|/w {Token},{message}");
+    }
+
+    public static Rank GetRank(string input)
+    {
+	    return input[..1] switch
+	    {
+		    "‽" => Enums.Rank.Locked,
+		    "!" => Enums.Rank.Muted,
+		    " " => Enums.Rank.Normal,
+		    "+" => Enums.Rank.Voice,
+		    "*" => Enums.Rank.Bot,
+		    "%" => Enums.Rank.Driver,
+		    "@" => Enums.Rank.Moderator,
+		    "&" => Enums.Rank.Administrator,
+		    "#" => Enums.Rank.RoomOwner,
+		    _ => throw new NotImplementedException($"Rank could not be found from {input}")
+	    };
+    }
+
+    public static string FromRank(Rank rank)
+    {
+	    return rank switch
+	    {
+		    Rank.Locked => "‽",
+		    Rank.Muted => "!",
+		    Rank.Normal => string.Empty,
+		    Rank.Voice => "+",
+		    Rank.Bot => "*",
+		    Rank.Driver => "%",
+		    Rank.Moderator => "@",
+		    Rank.Administrator => "&",
+		    Rank.RoomOwner => "#",
+		    _ => throw new ArgumentOutOfRangeException(nameof(rank), rank, null)
+	    };
+    }
 
     public override string ToString()
     {
-        return DisplayName;
-    }
-
-    public static implicit operator PsimUsername(string input)
-    {
-        return new PsimUsername(input);
+	    return $"{FromRank(Rank)}{DisplayName}";
     }
 }

@@ -58,20 +58,20 @@ internal class ProcessCommands : ISubscriber<PsimData>
     private async Task HandleChatMessage(PsimData e)
     {
         var datePosted = DateTimeOffset.FromUnixTimeSeconds(long.Parse(e.Arguments[0])).LocalDateTime;
-        var user = _client.Users[e.Arguments[1]];
+        var user = new PsimUsername(_client, e.Arguments[1]);
         await _client.Publish(new ChatMessage(e.Room, datePosted, user, e.Arguments[2], e.IsIntro));
     }
 
     private async Task HandlePrivateMessage(PsimData e)
     {
-        if (e.Arguments[0] == "~")
+        if (e.Arguments[1] == "~")
         {
             await _client.Publish(new PrivateSystemMessage(e.Arguments[2]));
         }
         else
-        {
-            var user = _client.Users[e.Arguments[0]];
-            await _client.Publish(new PrivateMessage(user, e.Arguments[2], e.IsIntro));
+		{
+			var user = new PsimUsername(_client, e.Arguments[0]);
+			await _client.Publish(new PrivateMessage(user, e.Arguments[2], e.IsIntro));
         }
     }
 
@@ -79,7 +79,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
     {
         var split = e.Arguments[0].Split(',');
         var count = int.Parse(split[0]);
-        var users = split.Skip(1).Select(name => (new RankPsimUsername(name), _client.Users[name])).ToList();
+        var users = split.Skip(1).Select(name => new PsimUsername(_client, name)).ToList();
         await _client.Publish(new RoomUsers(e.Room, count, users));
     }
 }

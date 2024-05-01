@@ -14,7 +14,6 @@ public class PsimClient : Publisher
     public bool LoggedIn { get; internal set; }
 
     public RoomCollection Rooms { get; }
-    internal UserCollection Users { get; }
     public PsimClientOptions Options { get; }
 
     private readonly ClientWebSocket _socket;
@@ -31,12 +30,10 @@ public class PsimClient : Publisher
         _closeDescription = string.Empty;
 
         Rooms = new RoomCollection(this);
-        Users = new UserCollection(this);
 
         Subscribe(new ProcessByteBuffer(this));
         Subscribe(new ProcessCommands(this));
         Subscribe(new Authentication(this));
-        Subscribe(new UserJoinsRoom(this));
     }
 
     public async Task Connect(bool autoReconnect = false)

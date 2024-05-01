@@ -39,7 +39,11 @@ internal class ProcessByteBuffer : ISubscriber<ByteBuffer>
 
             for (var index = start; index < split.Length; index++)
             {
-                var item = split[index].Split('|')[1];
+                var subsplit = split[index].Split('|');
+                if (subsplit.Length == 1)
+                    continue;
+                
+                var item = subsplit[1];
                 if (item == "init")
                 {
                     for (var subIndex = index; subIndex < split.Length; subIndex++)
