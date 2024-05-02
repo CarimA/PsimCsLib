@@ -45,16 +45,18 @@ public class PsimClient : Publisher
 			try
 			{
 				_socket = new ClientWebSocket();
+				_socket.Options.KeepAliveInterval = TimeSpan.FromMinutes(5);
+
 				await _socket.ConnectAsync(new Uri(Options.ToServerUri()), _cancellationTokenSource.Token);
-				Debug.WriteLine("SOCKET CONNECTED ------------------------------------------");
+				Debug.WriteLine("[PsimCsLib] socket connected");
 				await Publish(new SocketConnected());
 
 				await Task.WhenAny(Send(), Receive(), CheckDisconnect());
-				Debug.WriteLine("SOCKET DISCONNECTED ------------------------------------------");
 			}
 			catch (WebSocketException ex)
 			{
 				await Publish(new SocketError(ex));
+				Debug.WriteLine($"[PsimCsLib] socket error: {ex}");
 
 				if (IsUnrecoverableWebsocketError(ex.WebSocketErrorCode))
 					return;
@@ -62,13 +64,19 @@ public class PsimClient : Publisher
 			catch (SocketException ex)
 			{
 				await Publish(new SocketError(ex));
+				Debug.WriteLine($"[PsimCsLib] socket error: {ex}");
 			}
 			finally
 			{
-				await Cleanup();
+				var status = _socket.CloseStatus ?? WebSocketCloseStatus.NormalClosure;
+				var desc = _socket.CloseStatusDescription ?? _closeDescription;
+				await Publish(new SocketDisconnected(status, desc));
+				Debug.WriteLine($"[PsimCsLib] socket disconnected ({status}: {desc})");
+				_socket?.Dispose();
 			}
 
 			await Task.Delay(500);
+			Debug.WriteLine("[PsimCsLib] socket attempting to reconnect...");
 		}
 	}
 
@@ -76,14 +84,6 @@ public class PsimClient : Publisher
 	{
 		return error is WebSocketError.NotAWebSocket or WebSocketError.UnsupportedProtocol
 			or WebSocketError.UnsupportedVersion;
-	}
-
-	private async Task Cleanup()
-	{
-		var status = _socket.CloseStatus ?? WebSocketCloseStatus.NormalClosure;
-		var desc = _socket.CloseStatusDescription ?? _closeDescription;
-		await Publish(new SocketDisconnected(status, desc));
-		_socket?.Dispose();
 	}
 
 	public void Disconnect(string reason)
@@ -100,11 +100,12 @@ public class PsimClient : Publisher
 		{
 			if (token.IsCancellationRequested)
 			{
+				Debug.WriteLine("[PsimCsLib] socket disconnect requested");
 				await _socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, token);
 				return;
 			}
 
-			await Task.Delay(50);
+			await Task.Delay(100);
 		}
 	}
 
@@ -121,7 +122,7 @@ public class PsimClient : Publisher
 		{
 			if (!LoggedIn)
 			{
-				await Task.Delay(50);
+				await Task.Delay(100);
 				continue;
 			}
 
@@ -131,7 +132,7 @@ public class PsimClient : Publisher
 				item.Task.SetResult();
 			}
 
-			await Task.Delay(500);
+			await Task.Delay(200);
 		}
 	}
 
@@ -143,30 +144,42 @@ public class PsimClient : Publisher
 
 	private async Task Receive()
 	{
-		var buffer = new Memory<byte>(new byte[256]);
+		var token = _cancellationTokenSource.Token;
+		var buffer = new Memory<byte>(new byte[1024]);
 		await using var dataStream = new MemoryStream();
 
 		while (_socket.State == WebSocketState.Open)
 		{
-			ValueWebSocketReceiveResult result;
-
-			do
+			try
 			{
-				result = await _socket.ReceiveAsync(buffer, CancellationToken.None);
+				ValueWebSocketReceiveResult result;
 
-				if (result.MessageType == WebSocketMessageType.Close)
+				do
 				{
-					Disconnect("Disconnect requested by server.");
-					return;
-				}
+					result = await _socket.ReceiveAsync(buffer, token);
 
-				await dataStream.WriteAsync(buffer[..result.Count], CancellationToken.None);
-			} while (!result.EndOfMessage);
+					if (result.MessageType == WebSocketMessageType.Close)
+					{
+						Disconnect("Disconnect requested by server.");
+						return;
+					}
 
-			var bytes = dataStream.ToArray();
-			await Publish(new ByteBuffer(bytes));
+					await dataStream.WriteAsync(buffer[..result.Count], token);
+				} while (!result.EndOfMessage);
+			}
+			catch (SocketException ex)
+			{
+				Debug.WriteLine($"[PsimCsLib] no packets received during keepalive: {ex}");
+			}
+			finally
+			{
+				var bytes = dataStream.ToArray();
+				if (bytes.Length > 0)
+					await Publish(new ByteBuffer(bytes));
 
-			dataStream.SetLength(0);
+				dataStream.SetLength(0);
+				await dataStream.FlushAsync();
+			}
 		}
 	}
 
