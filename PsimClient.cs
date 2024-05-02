@@ -3,8 +3,11 @@ using PsimCsLib.Models;
 using PsimCsLib.Modules;
 using PsimCsLib.PubSub;
 using System.Collections.Concurrent;
+using System.Diagnostics;
+using System.Net.Sockets;
 using System.Net.WebSockets;
 using System.Text;
+using SocketError = PsimCsLib.Models.SocketError;
 
 namespace PsimCsLib;
 
@@ -16,7 +19,7 @@ public class PsimClient : Publisher
 	public RoomCollection Rooms { get; }
 	public PsimClientOptions Options { get; }
 
-	private readonly ClientWebSocket _socket;
+	private ClientWebSocket _socket;
 	private readonly CancellationTokenSource _cancellationTokenSource;
 	private readonly ConcurrentQueue<(string Message, TaskCompletionSource Task)> _messageQueue;
 	private string _closeDescription;
@@ -24,7 +27,6 @@ public class PsimClient : Publisher
 	public PsimClient(PsimClientOptions options)
 	{
 		Options = options;
-		_socket = new ClientWebSocket();
 		_cancellationTokenSource = new CancellationTokenSource();
 		_messageQueue = new ConcurrentQueue<(string, TaskCompletionSource)>();
 		_closeDescription = string.Empty;
@@ -36,19 +38,19 @@ public class PsimClient : Publisher
 		Subscribe(new Authentication(this));
 	}
 
-	public async Task Connect(bool autoReconnect = false)
+	public async Task Connect()
 	{
-		var firstRun = true;
-		while (autoReconnect || firstRun)
+		while (true)
 		{
-			firstRun = false;
-
 			try
 			{
+				_socket = new ClientWebSocket();
 				await _socket.ConnectAsync(new Uri(Options.ToServerUri()), _cancellationTokenSource.Token);
+				Debug.WriteLine("SOCKET CONNECTED ------------------------------------------");
 				await Publish(new SocketConnected());
 
 				await Task.WhenAny(Send(), Receive(), CheckDisconnect());
+				Debug.WriteLine("SOCKET DISCONNECTED ------------------------------------------");
 			}
 			catch (WebSocketException ex)
 			{
@@ -56,6 +58,10 @@ public class PsimClient : Publisher
 
 				if (IsUnrecoverableWebsocketError(ex.WebSocketErrorCode))
 					return;
+			}
+			catch (SocketException ex)
+			{
+				await Publish(new SocketError(ex));
 			}
 			finally
 			{
