@@ -38,45 +38,54 @@ public class PsimClient : Publisher
 		Subscribe(new Authentication(this));
 	}
 
-	public async Task Connect()
+	public async Task Connect(bool reconnect)
 	{
-		while (true)
+		if (reconnect)
 		{
-			try
+			while (true)
 			{
-				_socket = new ClientWebSocket();
-				_socket.Options.KeepAliveInterval = TimeSpan.FromMinutes(5);
-
-				await _socket.ConnectAsync(new Uri(Options.ToServerUri()), _cancellationTokenSource.Token);
-				Debug.WriteLine("[PsimCsLib] socket connected");
-				await Publish(new SocketConnected());
-
-				await Task.WhenAny(Send(), Receive(), CheckDisconnect());
+				await Connect();
+				await Task.Delay(500);
+				Debug.WriteLine("[PsimCsLib] socket attempting to reconnect...");
 			}
-			catch (WebSocketException ex)
-			{
-				await Publish(new SocketError(ex));
-				Debug.WriteLine($"[PsimCsLib] socket error: {ex}");
+		}
 
-				if (IsUnrecoverableWebsocketError(ex.WebSocketErrorCode))
-					return;
-			}
-			catch (SocketException ex)
-			{
-				await Publish(new SocketError(ex));
-				Debug.WriteLine($"[PsimCsLib] socket error: {ex}");
-			}
-			finally
-			{
-				var status = _socket.CloseStatus ?? WebSocketCloseStatus.NormalClosure;
-				var desc = _socket.CloseStatusDescription ?? _closeDescription;
-				await Publish(new SocketDisconnected(status, desc));
-				Debug.WriteLine($"[PsimCsLib] socket disconnected ({status}: {desc})");
-				_socket?.Dispose();
-			}
+		await Connect();
+	}
 
-			await Task.Delay(500);
-			Debug.WriteLine("[PsimCsLib] socket attempting to reconnect...");
+	private async Task Connect()
+	{
+		try
+		{
+			_socket = new ClientWebSocket();
+			_socket.Options.KeepAliveInterval = TimeSpan.FromMinutes(5);
+
+			await _socket.ConnectAsync(new Uri(Options.ToServerUri()), _cancellationTokenSource.Token);
+			Debug.WriteLine("[PsimCsLib] socket connected");
+			await Publish(new SocketConnected());
+
+			await Task.WhenAny(Send(), Receive(), CheckDisconnect());
+		}
+		catch (WebSocketException ex)
+		{
+			await Publish(new SocketError(ex));
+			Debug.WriteLine($"[PsimCsLib] socket error: {ex}");
+
+			if (IsUnrecoverableWebsocketError(ex.WebSocketErrorCode))
+				return;
+		}
+		catch (SocketException ex)
+		{
+			await Publish(new SocketError(ex));
+			Debug.WriteLine($"[PsimCsLib] socket error: {ex}");
+		}
+		finally
+		{
+			var status = _socket.CloseStatus ?? WebSocketCloseStatus.NormalClosure;
+			var desc = _socket.CloseStatusDescription ?? _closeDescription;
+			await Publish(new SocketDisconnected(status, desc));
+			Debug.WriteLine($"[PsimCsLib] socket disconnected ({status}: {desc})");
+			_socket?.Dispose();
 		}
 	}
 
