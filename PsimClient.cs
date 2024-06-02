@@ -46,7 +46,7 @@ public class PsimClient : Publisher
 			{
 				await Connect();
 				await Task.Delay(500);
-				Debug.WriteLine("[PsimCsLib] socket attempting to reconnect...");
+				Trace.WriteLine("[PsimCsLib] socket attempting to reconnect...");
 			}
 		}
 
@@ -61,7 +61,7 @@ public class PsimClient : Publisher
 			_socket.Options.KeepAliveInterval = TimeSpan.FromMinutes(5);
 
 			await _socket.ConnectAsync(new Uri(Options.ToServerUri()), _cancellationTokenSource.Token);
-			Debug.WriteLine("[PsimCsLib] socket connected");
+			Trace.WriteLine("[PsimCsLib] socket connected");
 			await Publish(new SocketConnected());
 
 			await Task.WhenAny(Send(), Receive(), CheckDisconnect());
@@ -69,7 +69,7 @@ public class PsimClient : Publisher
 		catch (WebSocketException ex)
 		{
 			await Publish(new SocketError(ex));
-			Debug.WriteLine($"[PsimCsLib] socket error: {ex}");
+			Trace.WriteLine($"[PsimCsLib] socket error: {ex}");
 
 			if (IsUnrecoverableWebsocketError(ex.WebSocketErrorCode))
 				return;
@@ -77,14 +77,14 @@ public class PsimClient : Publisher
 		catch (SocketException ex)
 		{
 			await Publish(new SocketError(ex));
-			Debug.WriteLine($"[PsimCsLib] socket error: {ex}");
+			Trace.WriteLine($"[PsimCsLib] socket error: {ex}");
 		}
 		finally
 		{
 			var status = _socket.CloseStatus ?? WebSocketCloseStatus.NormalClosure;
 			var desc = _socket.CloseStatusDescription ?? _closeDescription;
 			await Publish(new SocketDisconnected(status, desc));
-			Debug.WriteLine($"[PsimCsLib] socket disconnected ({status}: {desc})");
+			Trace.WriteLine($"[PsimCsLib] socket disconnected ({status}: {desc})");
 			_socket?.Dispose();
 		}
 	}
@@ -109,7 +109,7 @@ public class PsimClient : Publisher
 		{
 			if (token.IsCancellationRequested)
 			{
-				Debug.WriteLine("[PsimCsLib] socket disconnect requested");
+				Trace.WriteLine("[PsimCsLib] socket disconnect requested");
 				await _socket.CloseAsync(WebSocketCloseStatus.NormalClosure, string.Empty, token);
 				return;
 			}
@@ -178,7 +178,7 @@ public class PsimClient : Publisher
 			}
 			catch (SocketException ex)
 			{
-				Debug.WriteLine($"[PsimCsLib] no packets received during keepalive: {ex}");
+				Trace.WriteLine($"[PsimCsLib] no packets received during keepalive: {ex}");
 			}
 			finally
 			{
