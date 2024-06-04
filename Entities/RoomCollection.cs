@@ -11,7 +11,7 @@ public class RoomCollection
 		_rooms = new Dictionary<string, Room>();
 	}
 
-	internal Room this[string key]
+	public Room this[string key]
 	{
 		get
 		{
