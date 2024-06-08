@@ -42,22 +42,23 @@ public class PsimUsername : IEquatable<PsimUsername>
 
 	public async Task Send(string message)
 	{
-		await _client.Send($"|/w {Token},{message}");
+		await _client.Send($"|/w {Token},{message}").ConfigureAwait(false);
 	}
 
 	public static Rank GetRank(string input)
 	{
 		return input[..1] switch
 		{
-			"‽" => Enums.Rank.Locked,
-			"!" => Enums.Rank.Muted,
-			" " => Enums.Rank.Normal,
-			"+" => Enums.Rank.Voice,
-			"*" => Enums.Rank.Bot,
-			"%" => Enums.Rank.Driver,
-			"@" => Enums.Rank.Moderator,
-			"&" => Enums.Rank.Administrator,
-			"#" => Enums.Rank.RoomOwner,
+			"‽" => Rank.Locked,
+			"!" => Rank.Muted,
+			"☆" => Rank.Battler,
+			" " => Rank.Normal,
+			"+" => Rank.Voice,
+			"*" => Rank.Bot,
+			"%" => Rank.Driver,
+			"@" => Rank.Moderator,
+			"&" => Rank.Administrator,
+			"#" => Rank.RoomOwner,
 			_ => throw new NotImplementedException($"Rank could not be found from {input}")
 		};
 	}
@@ -68,6 +69,7 @@ public class PsimUsername : IEquatable<PsimUsername>
 		{
 			Rank.Locked => "‽",
 			Rank.Muted => "!",
+			Rank.Battler => "☆",
 			Rank.Normal => string.Empty,
 			Rank.Voice => "+",
 			Rank.Bot => "*",

@@ -4,6 +4,7 @@ public enum Rank
 {
 	Locked,
 	Muted,
+	Battler,
 	Normal,
 	Voice,
 	Bot,

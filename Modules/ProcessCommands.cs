@@ -24,6 +24,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
 			"c:" => HandleChatMessage,
 			"pm" => HandlePrivateMessage,
 			"users" => HandleUsers,
+			"queryresponse" => HandleQueryResponse,
 			_ => NotImplementedCommand
 		});
 
@@ -81,5 +82,30 @@ internal class ProcessCommands : ISubscriber<PsimData>
 		var count = int.Parse(split[0]);
 		var users = split.Skip(1).Select(name => new PsimUsername(_client, name)).ToList();
 		await _client.Publish(new RoomUsers(e.Room, count, users));
+	}
+
+	private async Task HandleQueryResponse(PsimData e)
+	{
+		var action = (Func<PsimData, Task>)(e.Arguments.FirstOrDefault() switch
+		{
+			"userdetails" => HandleUserDetails,
+		});
+
+		await action(e).ConfigureAwait(false);
+	}
+
+	private async Task HandleUserDetails(PsimData arg)
+	{
+		var json = arg.Arguments.LastOrDefault();
+
+		if (json == null)
+			return;
+
+		var details = UserDetails.FromJson(json);
+
+		if (details == null)
+			return;
+
+		await _client.Publish(details).ConfigureAwait(false);
 	}
 }

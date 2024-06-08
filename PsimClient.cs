@@ -24,11 +24,14 @@ public class PsimClient : Publisher
 	private readonly ConcurrentQueue<(string Message, TaskCompletionSource Task)> _messageQueue;
 	private string _closeDescription;
 
+	private ConcurrentDictionary<string, UserDetails> _userDetailsRequests;
+
 	public PsimClient(PsimClientOptions options)
 	{
 		Options = options;
 		_cancellationTokenSource = new CancellationTokenSource();
 		_messageQueue = new ConcurrentQueue<(string, TaskCompletionSource)>();
+		_userDetailsRequests = new ConcurrentDictionary<string, UserDetails>();
 		_closeDescription = string.Empty;
 
 		Rooms = new RoomCollection(this);
@@ -36,6 +39,7 @@ public class PsimClient : Publisher
 		Subscribe(new ProcessByteBuffer(this));
 		Subscribe(new ProcessCommands(this));
 		Subscribe(new Authentication(this));
+		Subscribe(new UserDetailsResolver(_userDetailsRequests));
 	}
 
 	public async Task Connect(bool reconnect)
@@ -186,6 +190,8 @@ public class PsimClient : Publisher
 				if (bytes.Length > 0)
 					await Publish(new ByteBuffer(bytes));
 
+				Debug.WriteLine(Encoding.UTF8.GetString(bytes));
+
 				dataStream.SetLength(0);
 				await dataStream.FlushAsync();
 			}
@@ -200,5 +206,29 @@ public class PsimClient : Publisher
 	public async Task SetStatus(string status)
 	{
 		await Send($"|/status ${status}");
+	}
+
+	public async Task<UserDetails?> GetUserDetails(string username, TimeSpan timeout)
+	{
+		var id = PsimUsername.TokeniseName(username);
+		
+		await Send($"|/cmd userdetails {id}");
+
+		// for the life of me, I cannot figure out why an ordinary TaskCompletionSource blocks here
+		// I don't really like having to do this in a while loop that yields, so revisit this another time
+		var time = 0f;
+		while (time < timeout.TotalSeconds)
+		{
+			if (_userDetailsRequests.TryGetValue(id, out var value))
+			{
+				_userDetailsRequests.TryRemove(id, out _);
+				return value;
+			}
+
+			await Task.Delay(20);
+			time += 0.2f;
+		}
+
+		return null;
 	}
 }
