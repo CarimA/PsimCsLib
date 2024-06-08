@@ -22,6 +22,8 @@ internal class ProcessCommands : ISubscriber<PsimData>
 			"deinit" => HandleClientRoomLeave,
 			"raw" => HandleRaw,
 			"c:" => HandleChatMessage,
+			"j" => HandleJoin,
+			"l" => HandleLeave,
 			"pm" => HandlePrivateMessage,
 			"users" => HandleUsers,
 			"queryresponse" => HandleQueryResponse,
@@ -61,6 +63,18 @@ internal class ProcessCommands : ISubscriber<PsimData>
 		var datePosted = DateTimeOffset.FromUnixTimeSeconds(long.Parse(e.Arguments[0])).LocalDateTime;
 		var user = new PsimUsername(_client, e.Arguments[1]);
 		await _client.Publish(new ChatMessage(e.Room, datePosted, user, e.Arguments[2], e.IsIntro));
+	}
+
+	private async Task HandleJoin(PsimData e)
+	{
+		var user = new PsimUsername(_client, e.Arguments[0]);
+		await _client.Publish(new UserJoinRoom(e.Room, user, e.IsIntro));
+	}
+
+	private async Task HandleLeave(PsimData e)
+	{
+		var user = new PsimUsername(_client, e.Arguments[0]);
+		await _client.Publish(new UserLeaveRoom(e.Room, user, e.IsIntro));
 	}
 
 	private async Task HandlePrivateMessage(PsimData e)
