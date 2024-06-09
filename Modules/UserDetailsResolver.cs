@@ -6,16 +6,22 @@ namespace PsimCsLib.Modules;
 
 public class UserDetailsResolver : ISubscriber<UserDetails>
 {
-    private readonly ConcurrentDictionary<string, UserDetails> _userDetailsRequests;
+    private readonly Dictionary<string, TaskCompletionSource<UserDetails>> _userDetailsRequests;
 
-    public UserDetailsResolver(ConcurrentDictionary<string, UserDetails> userDetailsRequests)
+    public UserDetailsResolver(Dictionary<string, TaskCompletionSource<UserDetails>> userDetailsRequests)
     {
         _userDetailsRequests = userDetailsRequests;
     }
 
     public Task HandleEvent(UserDetails e)
     {
-	    _userDetailsRequests.TryAdd(e.UserId, e);
+	    if (_userDetailsRequests.TryGetValue(e.UserId, out var tcs))
+	    {
+		    tcs.SetResult(e);
+            _userDetailsRequests.Remove(e.UserId);
+	    }
+
+	    //_userDetailsRequests.TryAdd(e.UserId, e);
 	    return Task.CompletedTask;
     }
 }

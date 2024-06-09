@@ -112,7 +112,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
 			"userdetails" => HandleUserDetails,
 		});
 
-		await action(e).ConfigureAwait(false);
+		await action(e);
 	}
 
 	private async Task HandleUserDetails(PsimData arg)
@@ -127,6 +127,6 @@ internal class ProcessCommands : ISubscriber<PsimData>
 		if (details == null)
 			return;
 
-		await _client.Publish(details).ConfigureAwait(false);
+		await _client.Publish(details);
 	}
 }

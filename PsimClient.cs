@@ -24,14 +24,14 @@ public class PsimClient : Publisher
 	private readonly ConcurrentQueue<(string Message, TaskCompletionSource Task)> _messageQueue;
 	private string _closeDescription;
 
-	private ConcurrentDictionary<string, UserDetails> _userDetailsRequests;
+	private Dictionary<string, TaskCompletionSource<UserDetails>> _userDetailsRequests;
 
 	public PsimClient(PsimClientOptions options)
 	{
 		Options = options;
 		_cancellationTokenSource = new CancellationTokenSource();
 		_messageQueue = new ConcurrentQueue<(string, TaskCompletionSource)>();
-		_userDetailsRequests = new ConcurrentDictionary<string, UserDetails>();
+		_userDetailsRequests = new Dictionary<string, TaskCompletionSource<UserDetails>>();
 		_closeDescription = string.Empty;
 
 		Rooms = new RoomCollection(this);
@@ -74,9 +74,6 @@ public class PsimClient : Publisher
 		{
 			await Publish(new SocketError(ex));
 			Trace.WriteLine($"[PsimCsLib] socket error: {ex}");
-
-			if (IsUnrecoverableWebsocketError(ex.WebSocketErrorCode))
-				return;
 		}
 		catch (SocketException ex)
 		{
@@ -91,12 +88,6 @@ public class PsimClient : Publisher
 			Trace.WriteLine($"[PsimCsLib] socket disconnected ({status}: {desc})");
 			_socket?.Dispose();
 		}
-	}
-
-	private bool IsUnrecoverableWebsocketError(WebSocketError error)
-	{
-		return error is WebSocketError.NotAWebSocket or WebSocketError.UnsupportedProtocol
-			or WebSocketError.UnsupportedVersion;
 	}
 
 	public void Disconnect(string reason)
@@ -118,7 +109,7 @@ public class PsimClient : Publisher
 				return;
 			}
 
-			await Task.Delay(100);
+			await Task.Yield();
 		}
 	}
 
@@ -145,7 +136,7 @@ public class PsimClient : Publisher
 				item.Task.SetResult();
 			}
 
-			await Task.Delay(200);
+			await Task.Yield();
 		}
 	}
 
@@ -188,13 +179,15 @@ public class PsimClient : Publisher
 			{
 				var bytes = dataStream.ToArray();
 				if (bytes.Length > 0)
-					await Publish(new ByteBuffer(bytes));
+					_ = Publish(new ByteBuffer(bytes)); // this is deliberate -- we do not want to block for Tasks called inside commands
 
-				Debug.WriteLine(Encoding.UTF8.GetString(bytes));
+				Debug.WriteLine($"[PsimCsLib] {Encoding.UTF8.GetString(bytes)}");
 
 				dataStream.SetLength(0);
 				await dataStream.FlushAsync();
 			}
+
+			await Task.Yield();
 		}
 	}
 
@@ -211,24 +204,19 @@ public class PsimClient : Publisher
 	public async Task<UserDetails?> GetUserDetails(string username, TimeSpan timeout)
 	{
 		var id = PsimUsername.TokeniseName(username);
-		
 		await Send($"|/cmd userdetails {id}");
 
-		// for the life of me, I cannot figure out why an ordinary TaskCompletionSource blocks here
-		// I don't really like having to do this in a while loop that yields, so revisit this another time
-		var time = 0f;
-		while (time < timeout.TotalSeconds)
+		var tcs = new TaskCompletionSource<UserDetails>(TaskCreationOptions.RunContinuationsAsynchronously);
+		_userDetailsRequests.Add(id, tcs);
+
+		try
 		{
-			if (_userDetailsRequests.TryGetValue(id, out var value))
-			{
-				_userDetailsRequests.TryRemove(id, out _);
-				return value;
-			}
-
-			await Task.Delay(20);
-			time += 0.2f;
+			var result = await tcs.Task.WaitAsync(timeout);
+			return result;
 		}
-
-		return null;
+		catch
+		{
+			return null;
+		}
 	}
 }

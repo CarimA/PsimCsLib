@@ -48,8 +48,9 @@ internal class Authentication : ISubscriber<ChallengeString>, ISubscriber<LoginS
 		_client.LoggedIn = true;
 	}
 
-	public async Task HandleEvent(LoginFailure e)
+	public Task HandleEvent(LoginFailure e)
 	{
 		_client.Disconnect($"{e.Reason} ({e.ResponseString})");
+		return Task.CompletedTask;
 	}
 }

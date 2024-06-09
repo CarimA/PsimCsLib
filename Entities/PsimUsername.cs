@@ -42,7 +42,7 @@ public class PsimUsername : IEquatable<PsimUsername>
 
 	public async Task Send(string message)
 	{
-		await _client.Send($"|/w {Token},{message}").ConfigureAwait(false);
+		await _client.Send($"|/w {Token},{message}");
 	}
 
 	public static Rank GetRank(string input)
