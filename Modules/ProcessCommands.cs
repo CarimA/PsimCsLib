@@ -15,7 +15,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
 
 	public async Task HandleEvent(PsimData e)
 	{
-		var action = (Func<PsimData, Task>)(e.Command switch
+		var action = (Func<PsimData, Task>)(e.Command.ToLowerInvariant() switch
 		{
 			"challstr" => HandleChallengeString,
 			"init" => HandleClientRoomJoin,
