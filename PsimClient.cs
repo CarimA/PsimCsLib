@@ -214,9 +214,14 @@ public class PsimClient : Publisher
 			var result = await tcs.Task.WaitAsync(timeout);
 			return result;
 		}
-		catch
+		catch (TimeoutException)
 		{
+			tcs.SetCanceled();
 			return null;
+		}
+		finally
+		{
+			_userDetailsRequests.Remove(id);
 		}
 	}
 }

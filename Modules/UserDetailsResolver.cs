@@ -20,8 +20,7 @@ public class UserDetailsResolver : ISubscriber<UserDetails>
 		    tcs.SetResult(e);
             _userDetailsRequests.Remove(e.UserId);
 	    }
-
-	    //_userDetailsRequests.TryAdd(e.UserId, e);
+        
 	    return Task.CompletedTask;
     }
 }
