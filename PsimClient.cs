@@ -40,6 +40,7 @@ public class PsimClient : Publisher
 		Subscribe(new ProcessCommands(this));
 		Subscribe(new Authentication(this));
 		Subscribe(new UserDetailsResolver(_userDetailsRequests));
+		Subscribe(new ManageUsers());
 	}
 
 	public async Task Connect(bool reconnect)

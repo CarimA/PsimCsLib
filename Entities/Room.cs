@@ -4,11 +4,13 @@ public class Room
 {
 	private readonly PsimClient _client;
 	public string Name { get; }
+	public List<PsimUsername> Users { get; internal set; }
 
 	internal Room(PsimClient client, string name)
 	{
 		_client = client;
 		Name = name;
+		Users = new List<PsimUsername>();
 	}
 
 	public async Task Send(string message)

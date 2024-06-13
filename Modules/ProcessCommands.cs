@@ -110,6 +110,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
 		var action = (Func<PsimData, Task>)(e.Arguments.FirstOrDefault() switch
 		{
 			"userdetails" => HandleUserDetails,
+			_ => NotImplementedCommand
 		});
 
 		await action(e);
