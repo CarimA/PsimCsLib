@@ -6,10 +6,10 @@ namespace PsimCsLib.Entities;
 public class PsimUsername : IEquatable<PsimUsername>
 {
 	private readonly PsimClient _client;
-	public Rank Rank { get; }
-	public string Token { get; }
-	public string DisplayName { get; }
-	public bool IsIdle { get; }
+	public Rank Rank { get; internal set; }
+	public string Token { get; internal set; }
+	public string DisplayName { get; internal set; }
+	public bool IsIdle { get; internal set; }
 
 	internal PsimUsername(PsimClient client, string input)
 	{
