@@ -14,11 +14,12 @@ public class UserDetails
 		public string avatar { get; set; }
 		public string group { get; set; }
 		public bool autoconfirmed { get; set; }
+		public bool rooms { get; set; }
 	}
 
 	internal class UserDetailsDto : OfflineUserDetailsDto
 	{
-		public Dictionary<string, UserDetailsRoomDto> rooms { get; set; }
+		public new Dictionary<string, UserDetailsRoomDto> rooms { get; set; }
 
 		internal class UserDetailsRoomDto
 		{

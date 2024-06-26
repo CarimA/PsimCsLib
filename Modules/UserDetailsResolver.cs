@@ -14,10 +14,10 @@ public class UserDetailsResolver : ISubscriber<UserDetails>
 
 	public Task HandleEvent(UserDetails e)
 	{
-		if (_userDetailsRequests.TryGetValue(e.UserId, out var tcs))
+		if (_userDetailsRequests.TryGetValue(e.Id, out var tcs))
 		{
 			tcs.SetResult(e);
-			_userDetailsRequests.Remove(e.UserId);
+			_userDetailsRequests.Remove(e.Id);
 		}
 
 		return Task.CompletedTask;
