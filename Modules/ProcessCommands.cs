@@ -77,7 +77,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
 		var user = new PsimUsername(_client, e.Arguments[0]);
 		await _client.Publish(new UserLeaveRoom(e.Room, user, e.IsIntro));
 	}
-	
+
 	private async Task HandleRename(PsimData e)
 	{
 		var user = new PsimUsername(_client, e.Arguments[0]);

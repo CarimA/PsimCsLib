@@ -29,21 +29,21 @@ public class UserDetails
 	}
 
 	public string Id { get; private set; }
-    public string UserId { get; private set; }
-    public string Name { get; private set; }
-    public string Avatar { get; private set; }
-    public Rank GlobalRank { get; private set; }
-    public bool IsAutoconfirmed { get; private set; }
-    public Dictionary<string, Rank> Rooms { get; private set; }
+	public string UserId { get; private set; }
+	public string Name { get; private set; }
+	public string Avatar { get; private set; }
+	public Rank GlobalRank { get; private set; }
+	public bool IsAutoconfirmed { get; private set; }
+	public Dictionary<string, Rank> Rooms { get; private set; }
 
-    public UserDetails()
-    {
+	public UserDetails()
+	{
 
-    }
+	}
 
-    public static UserDetails? FromJson(string json)
-    {
-	    OfflineUserDetailsDto? dto = null!;
+	public static UserDetails? FromJson(string json)
+	{
+		OfflineUserDetailsDto? dto = null!;
 		try
 		{
 			dto = JsonConvert.DeserializeObject<UserDetailsDto>(json);
@@ -56,33 +56,33 @@ public class UserDetails
 		if (dto == null)
 			return null;
 
-        var details = new UserDetails
-        {
-	        Id = dto.id,
-	        UserId = dto.userid,
-	        Name = dto.name,
-	        Avatar = dto.avatar,
-	        GlobalRank = PsimUsername.GetRank(dto.group),
-	        IsAutoconfirmed = dto.autoconfirmed,
-	        Rooms = new Dictionary<string, Rank>()
-        };
+		var details = new UserDetails
+		{
+			Id = dto.id,
+			UserId = dto.userid,
+			Name = dto.name,
+			Avatar = dto.avatar,
+			GlobalRank = PsimUsername.GetRank(dto.group),
+			IsAutoconfirmed = dto.autoconfirmed,
+			Rooms = new Dictionary<string, Rank>()
+		};
 
-        if (dto is UserDetailsDto online)
-        {
-	        foreach (var (room, info) in online.rooms)
-	        {
-		        try
-		        {
-			        var rank = PsimUsername.GetRank(room);
-			        details.Rooms.Add(room.Substring(1), rank);
-		        }
-		        catch
-		        {
-			        details.Rooms.Add(room, Rank.Normal);
-		        }
-	        }
-        }
+		if (dto is UserDetailsDto online)
+		{
+			foreach (var (room, info) in online.rooms)
+			{
+				try
+				{
+					var rank = PsimUsername.GetRank(room);
+					details.Rooms.Add(room.Substring(1), rank);
+				}
+				catch
+				{
+					details.Rooms.Add(room, Rank.Normal);
+				}
+			}
+		}
 
-        return details;
+		return details;
 	}
 }
