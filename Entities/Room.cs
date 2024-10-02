@@ -17,4 +17,9 @@ public class Room
 	{
 		await _client.Send($"{Name}|{message}");
 	}
+
+	public async Task SendHtml(string id, string text)
+	{
+		await Send($"/adduhtml {id},{text}");
+	}
 }
