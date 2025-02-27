@@ -18,8 +18,18 @@ public class Room
 		await _client.Send($"{Name}|{message}");
 	}
 
-	public async Task SendHtml(string id, string text)
+	public async Task SendHtml(string id, string html)
 	{
-		await Send($"/adduhtml {id},{text}");
+		await Send($"/adduhtml {id},{html}");
+	}
+
+	public async Task ChangeHtml(string id, string html)
+	{
+		await Send($"/changeuhtml {id},{html}");
+	}
+
+	public async Task ModNote(string text)
+	{
+		await Send($"/modnote {text}");
 	}
 }

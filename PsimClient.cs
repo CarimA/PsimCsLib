@@ -135,6 +135,7 @@ public class PsimClient : Publisher
 			{
 				await ForceSend(item.Message);
 				item.Task.SetResult();
+				await Task.Delay(200);
 			}
 
 			await Task.Yield();
