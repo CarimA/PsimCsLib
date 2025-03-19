@@ -28,6 +28,7 @@ internal class ProcessCommands : ISubscriber<PsimData>
 			"pm" => HandlePrivateMessage,
 			"users" => HandleUsers,
 			"queryresponse" => HandleQueryResponse,
+			"tournament" => HandleTournament,
 			_ => NotImplementedCommand
 		});
 
@@ -129,5 +130,77 @@ internal class ProcessCommands : ISubscriber<PsimData>
 			return;
 
 		await _client.Publish(details);
+	}
+
+	private async Task HandleTournament(PsimData e)
+	{
+		/* |tournament|update|{"format":"gen9lc","generator":"Single Elimination","playerCap":32,"isStarted":false,"isJoined":false}
+		   |tournament|update|{"format":"[Gen 9] LC (with custom rules)"} 
+		   |tournament|update|{"bracketData":{"type":"tree","rootNode":null,"users":[]}}
+		   |tournament|updateEnd
+		   |tournament|forceend
+		*/
+
+		var action = (Func<PsimData, Task>)(e.Arguments.FirstOrDefault() switch
+		{
+			"update" => NotImplementedCommand,
+			"updateEnd" => NotImplementedCommand,
+			"create" => HandleTournamentCreated,
+			"autostart" => HandleAutoStart,
+			"autodq" => HandleAutoDisqualify,
+			"join" => HandleUserJoinedTournament,
+			"leave" => HandleUserLeftTournament,
+			"start" => NotImplementedCommand, // todo: get a message with this occurring to implement
+			"forceend" => NotImplementedCommand,
+			_ => NotImplementedCommand
+		});
+
+		await action(e);
+	}
+
+	private async Task HandleTournamentCreated(PsimData arg)
+	{
+		var format = arg.Arguments[1];
+		var type = arg.Arguments[2];
+		var playerCap = arg.Arguments.Count > 3 ? int.Parse(arg.Arguments[3]) : 0;
+		await _client.Publish(new TournamentCreated(arg.Room, format, type, playerCap, arg.IsIntro));
+	}
+
+	private async Task HandleAutoStart(PsimData arg)
+	{
+		if (arg.Arguments[1] == "on")
+		{
+			var time = arg.Arguments.Count > 2 ? int.Parse(arg.Arguments[2]) : 0;
+			await _client.Publish(new TournamentAutoStartEnabled(arg.Room, TimeSpan.FromMilliseconds(time), arg.IsIntro));
+		}
+		else
+		{
+			await _client.Publish(new TournamentAutoStartDisabled(arg.Room, arg.IsIntro));
+		}
+	}
+
+	private async Task HandleAutoDisqualify(PsimData arg)
+	{
+		if (arg.Arguments[1] == "on")
+		{
+			var time = arg.Arguments.Count > 2 ? int.Parse(arg.Arguments[2]) : 0;
+			await _client.Publish(new TournamentAutoDisqualifyEnabled(arg.Room, TimeSpan.FromMilliseconds(time), arg.IsIntro));
+		}
+		else
+		{
+			await _client.Publish(new TournamentAutoDisqualifyDisabled(arg.Room, arg.IsIntro));
+		}
+	}
+
+	private async Task HandleUserJoinedTournament(PsimData arg)
+	{
+		var user = new PsimUsername(_client, arg.Arguments[1]);
+		await _client.Publish(new TournamentUserJoined(arg.Room, user, arg.IsIntro));
+	}
+
+	private async Task HandleUserLeftTournament(PsimData arg)
+	{
+		var user = new PsimUsername(_client, arg.Arguments[1]);
+		await _client.Publish(new TournamentUserLeft(arg.Room, user, arg.IsIntro));
 	}
 }
